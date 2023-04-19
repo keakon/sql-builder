@@ -56,54 +56,54 @@ u3 := New[UserTable]("u3")
 
 * 查询单个表
 	```go
-	Select(u).FromTable(u).String() // SELECT * FROM `user`
+	Select(u).From(u).String() // SELECT * FROM `user`
 	// 以下示例均省略 .String()
-	Select(u.ID, u.Name).FromTable(u) // SELECT `id`, `name` FROM `user`
+	Select(u.ID, u.Name).From(u) // SELECT `id`, `name` FROM `user`
 	```
 * 限制返回数
 	```go
-	Select(u).FromTable(u).Limit(10)            // SELECT * FROM `user` LIMIT 10
-	Select(u).FromTable(u).Limit(10).Offset(20) // SELECT * FROM `user` LIMIT 20, 10
+	Select(u).From(u).Limit(10)            // SELECT * FROM `user` LIMIT 10
+	Select(u).From(u).Limit(10).Offset(20) // SELECT * FROM `user` LIMIT 20, 10
 	```
 * 排序
 	```go
-	Select(u).FromTable(u).OrderBy(u.ID.Desc()).OrderBy(u.Name.Asc()) // SELECT * FROM `user` ORDER BY `id` DESC, `name`
-	Select(u).FromTable(u).OrderBy(u.ID.Asc(), u.Name.Desc())         // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
+	Select(u).From(u).OrderBy(u.ID.Desc()).OrderBy(u.Name.Asc()) // SELECT * FROM `user` ORDER BY `id` DESC, `name`
+	Select(u).From(u).OrderBy(u.ID.Asc(), u.Name.Desc())         // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
 	```
 * 分组
 	```go
-	Select(u).FromTable(u).GroupBy(u.Name).GroupBy(u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
-	Select(u).FromTable(u).GroupBy(u.Name, u.ID)
+	Select(u).From(u).GroupBy(u.Name).GroupBy(u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
+	Select(u).From(u).GroupBy(u.Name, u.ID)
 	```
 * 加锁
 	```go
-	Select(u).FromTable(u).LockForShare()  // SELECT * FROM `user` FOR SHARE
-	Select(u).FromTable(u).LockForUpdate() // SELECT * FROM `user` FOR UPDATE
+	Select(u).From(u).LockForShare()  // SELECT * FROM `user` FOR SHARE
+	Select(u).From(u).LockForUpdate() // SELECT * FROM `user` FOR UPDATE
 	```
 * 查询条件
 	```go
-	Select(u).FromTable(u).Where(u.ID.Eq(Expr("1")))   // SELECT * FROM `user` WHERE `id` = 1
-	Select(u).FromTable(u).Where(u.ID.Eq(Placeholder)) // SELECT * FROM `user` WHERE `id` = ?
-	Select(u).FromTable(u).Where(u.ID.Eq(nil))         // SELECT * FROM `user` WHERE `id` IS NULL
-	Select(u).FromTable(u).Where(u.ID.In(Placeholder)) // SELECT * FROM `user` WHERE `id` IN (?)
-	Select(u).FromTable(u).Where(And(u.ID.Eq(Expr("1")), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3"))))) // SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)
+	Select(u).From(u).Where(u.ID.Eq(Expr("1")))   // SELECT * FROM `user` WHERE `id` = 1
+	Select(u).From(u).Where(u.ID.Eq(Placeholder)) // SELECT * FROM `user` WHERE `id` = ?
+	Select(u).From(u).Where(u.ID.Eq(nil))         // SELECT * FROM `user` WHERE `id` IS NULL
+	Select(u).From(u).Where(u.ID.In(Placeholder)) // SELECT * FROM `user` WHERE `id` IN (?)
+	Select(u).From(u).Where(And(u.ID.Eq(Expr("1")), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3"))))) // SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)
 	```
 	可用表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`。
 * Join
 	```go
-	Select(u).From(u.InnerJoin(u2, u.ID.Eq(u2.ID))) // SELECT `user`.* FROM `user` JOIN `user` AS `u2` ON `u`.`id` = `u2`.`id`
-	Select(u, u2.ID.As("other_id")).From(u.LeftJoin(u2, u.Name.Eq(u2.Name)).OuterJoin(u3, u2.ID.Eq(u3.ID))) // SELECT `u`.*, `u2`.`id` AS `other_id` FROM `user` LEFT JOIN `user` AS `u2` ON `u`.`name` = `u2`.`name` OUTER JON `user` AS `u3` ON `u2`.`id` = `u3`.`id`
+	Select(u).FromJoin(u.InnerJoin(u2, u.ID.Eq(u2.ID))) // SELECT `user`.* FROM `user` JOIN `user` AS `u2` ON `u`.`id` = `u2`.`id`
+	Select(u, u2.ID.As("other_id")).FromJoin(u.LeftJoin(u2, u.Name.Eq(u2.Name)).OuterJoin(u3, u2.ID.Eq(u3.ID))) // SELECT `u`.*, `u2`.`id` AS `other_id` FROM `user` LEFT JOIN `user` AS `u2` ON `u`.`name` = `u2`.`name` OUTER JON `user` AS `u3` ON `u2`.`id` = `u3`.`id`
 	```
-	可用 join 方式有 `InnerJoin`、`LeftJoin`、`RightJoin` 和 `OuterJoin`。
+	当有 join 时，会自动使用别名，并引入表名。注意不能用 `From`，而要用 `FromJoin`。可用 join 方式有 `InnerJoin`、`LeftJoin`、`RightJoin` 和 `OuterJoin`。
 * 函数
 	```go
-	Select(Func("SUM", u.ID).As("sum"), Func("COUNT", Expr("1"))).FromTable(u)      // SELECT SUM(`id`) AS `sum`, COUNT(1) FROM `user`
-	Select(Func("GROUP_CONCAT", Concat(u.Name, OrderBys{u.ID.Asc()}))).FromTable(u) // SELECT GROUP_CONCAT(`name` ORDER BY `id`) FROM `user`
+	Select(Func("SUM", u.ID).As("sum"), Func("COUNT", Expr("1"))).From(u)      // SELECT SUM(`id`) AS `sum`, COUNT(1) FROM `user`
+	Select(Func("GROUP_CONCAT", Concat(u.Name, OrderBys{u.ID.Asc()}))).From(u) // SELECT GROUP_CONCAT(`name` ORDER BY `id`) FROM `user`
 	```
-	`Concat` 用于将多个表达式连接起来。
+	`Concat` 用于将多个表达式连接起来，因为 `GROUP_CONCAT` 这个 MySQL 函数比较特殊，它不用 ", " 来分隔表达式。`OrderBys` 这个结构可以输出 ` ORDER BY ...`。
 * 子查询
 	```go
-	Select(Expr("*")).FromTable(u).Where(u.ID.In(Select(Func("DISTINCT", u.ID)).FromTable(u))) // SELECT * FROM `user` WHERE `id` IN (SELECT DISTINCT(`id`) FROM `user`)
+	Select(Expr("*")).From(u).Where(u.ID.In(Select(Func("DISTINCT", u.ID)).From(u))) // SELECT * FROM `user` WHERE `id` IN (SELECT DISTINCT(`id`) FROM `user`)
 	```
 
 ## 插入
@@ -119,6 +119,7 @@ u3 := New[UserTable]("u3")
 	Insert(u).Columns(u.ID, u.Name).NamedValues(u.ID, u.Name) // INSERT INTO `user` (`id`, `name`) VALUES (:id, :name)
 	Insert(u).Columns(u.ID, u.Name).NamedValues()             // 同上，可自动使用 Columns 来作为 NamedValues
 	```
+	当不提供 `Values` 时，会自动根据 `Columns` 的数量生成相应数量的占位符。
 * 冲突时更新
 	```go
 	Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(Placeholder))) // INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+?

@@ -34,7 +34,7 @@ func (q *InsertQuery) Values(values ...Expression) *InsertQuery {
 }
 
 func (q *InsertQuery) Select(table AnyTable, values ...Expression) *InsertQuery {
-	q.selectQuery = Select(values...).FromTable(table)
+	q.selectQuery = Select(values...).From(table)
 	return q
 }
 

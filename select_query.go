@@ -31,12 +31,12 @@ func Select(expressions ...Expression) *SelectQuery {
 	return &SelectQuery{expressions: expressions}
 }
 
-func (q *SelectQuery) From(from *FromTables) *SelectQuery {
+func (q *SelectQuery) FromJoin(from *FromTables) *SelectQuery {
 	q.from = from
 	return q
 }
 
-func (q *SelectQuery) FromTable(from AnyTable) *SelectQuery {
+func (q *SelectQuery) From(from AnyTable) *SelectQuery {
 	q.from = &FromTables{table: from}
 	return q
 }
