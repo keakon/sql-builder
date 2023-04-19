@@ -24,3 +24,8 @@
 1. 支持用 `NamedExec` 来批量插入，例如 `INSERT INTO table (a, buf, c) VALUES (:a, :buf, :c)`
 1. 支持同时查询结果和 count
 1. 缓存和预编译 SQL
+
+# 部分不支持的特性
+
+1. `UNION` 语句
+2. 复杂的子查询

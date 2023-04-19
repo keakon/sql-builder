@@ -19,8 +19,8 @@ type SelectQuery struct {
 	where       Cond
 	groupBys    Columns
 	orderBys    OrderBys
-	limit       uint
-	offset      uint
+	limit       uint64
+	offset      uint64
 	lockMode    SelectLockMode
 }
 
@@ -65,12 +65,12 @@ func (q *SelectQuery) OrderBy(orderBy ...OrderBy) *SelectQuery {
 	return q
 }
 
-func (q *SelectQuery) Limit(limit uint) *SelectQuery {
+func (q *SelectQuery) Limit(limit uint64) *SelectQuery {
 	q.limit = limit
 	return q
 }
 
-func (q *SelectQuery) Offset(offset uint) *SelectQuery {
+func (q *SelectQuery) Offset(offset uint64) *SelectQuery {
 	q.offset = offset
 	return q
 }
@@ -100,11 +100,11 @@ func (q *SelectQuery) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	if q.limit > 0 || q.offset > 0 {
 		buf.WriteString(" LIMIT ")
 		if q.offset > 0 { // LIMIT offset, limit
-			buf.WriteString(strconv.FormatUint(uint64(q.offset), 10))
+			buf.WriteString(strconv.FormatUint(q.offset, 10))
 			buf.WriteString(", ")
-			buf.WriteString(strconv.FormatUint(uint64(q.limit), 10))
+			buf.WriteString(strconv.FormatUint(q.limit, 10))
 		} else { // LIMIT limit
-			buf.WriteString(strconv.FormatUint(uint64(q.limit), 10))
+			buf.WriteString(strconv.FormatUint(q.limit, 10))
 		}
 	}
 	switch q.lockMode {

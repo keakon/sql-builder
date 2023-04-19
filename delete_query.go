@@ -5,24 +5,18 @@ import (
 	"strconv"
 )
 
-type UpdateQuery struct {
-	table       AnyTable
-	assignments Assignments
-	where       Cond
-	orderBys    OrderBys
-	limit       uint64
+type DeleteQuery struct {
+	table    AnyTable
+	where    Cond
+	orderBys OrderBys
+	limit    uint64
 }
 
-func Update(table AnyTable) *UpdateQuery {
-	return &UpdateQuery{table: table}
+func Delete(table AnyTable) *DeleteQuery {
+	return &DeleteQuery{table: table}
 }
 
-func (q *UpdateQuery) Set(assignments ...Assignment) *UpdateQuery {
-	q.assignments = assignments
-	return q
-}
-
-func (q *UpdateQuery) Where(cond Cond) *UpdateQuery {
+func (q *DeleteQuery) Where(cond Cond) *DeleteQuery {
 	switch cond := cond.(type) {
 	case Condition:
 		q.where = Conditions{
@@ -36,21 +30,20 @@ func (q *UpdateQuery) Where(cond Cond) *UpdateQuery {
 	return q
 }
 
-func (q *UpdateQuery) OrderBy(orderBy ...OrderBy) *UpdateQuery {
+func (q *DeleteQuery) OrderBy(orderBy ...OrderBy) *DeleteQuery {
 	q.orderBys = append(q.orderBys, orderBy...)
 	return q
 }
 
-func (q *UpdateQuery) Limit(limit uint64) *UpdateQuery {
+func (q *DeleteQuery) Limit(limit uint64) *DeleteQuery {
 	q.limit = limit
 	return q
 }
 
-func (q *UpdateQuery) WriteSQL(buf *bytes.Buffer) {
-	buf.WriteString("UPDATE `")
+func (q *DeleteQuery) WriteSQL(buf *bytes.Buffer) {
+	buf.WriteString("DELETE `")
 	buf.WriteString(q.table.getName())
-	buf.WriteString("` SET ")
-	q.assignments.WriteSQL(buf, NoAlias)
+	buf.WriteByte('`')
 	if q.where != nil {
 		q.where.WriteSQL(buf, NoAlias)
 	}
@@ -61,7 +54,7 @@ func (q *UpdateQuery) WriteSQL(buf *bytes.Buffer) {
 	}
 }
 
-func (q *UpdateQuery) String() string {
+func (q *DeleteQuery) String() string {
 	buf := pool.Get().(*bytes.Buffer)
 	buf.Reset()
 
