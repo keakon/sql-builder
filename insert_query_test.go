@@ -57,6 +57,10 @@ func TestInsertQuery(t *testing.T) {
 			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.Name.Assign(u.Name.Plus(u.ID))),
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name`=`name`+`id`",
 		},
+		{
+			query:    Insert(u).Columns(u.ID, u.Name).Select(u, Expr("1"), u.Name),
+			expected: "INSERT INTO `user` (`id`, `name`) SELECT 1, `name` FROM `user`", // 这是一个错误的 SQL，只用于测试能否正确生成
+		},
 	}
 
 	for _, test := range tests {

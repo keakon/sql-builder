@@ -8,6 +8,7 @@ type InsertQuery struct {
 	table       AnyTable
 	columns     Columns
 	values      Expressions
+	selectQuery *SelectQuery
 	assignments Assignments
 	aliasMode   AliasMode // of values
 	ignore      bool
@@ -32,6 +33,11 @@ func (q *InsertQuery) Values(values ...Expression) *InsertQuery {
 	return q
 }
 
+func (q *InsertQuery) Select(table AnyTable, values ...Expression) *InsertQuery {
+	q.selectQuery = Select(values...).FromTable(table)
+	return q
+}
+
 func (q *InsertQuery) NamedValues(values ...Expression) *InsertQuery {
 	q.values = values
 	q.aliasMode = ColonPrefix
@@ -52,25 +58,32 @@ func (q *InsertQuery) WriteSQL(buf *bytes.Buffer) {
 	buf.WriteString(q.table.getName())
 	buf.WriteString("` (")
 	q.columns.WriteSQL(buf, NoAlias)
-	buf.WriteString(") VALUES (")
-	if q.values == nil {
-		count := len(q.columns)
-		if count > 0 {
-			if q.aliasMode == ColonPrefix { // 使用 NamedValues() 绑定时，如果没有参数，就用 columns
-				q.columns.WriteSQL(buf, q.aliasMode)
-			} else { // 填充 '?'
-				for i := 0; i < count; i++ {
-					buf.WriteByte('?')
-					if i != count-1 {
-						buf.WriteString(", ")
+
+	if q.selectQuery == nil {
+		buf.WriteString(") VALUES (")
+		if q.values == nil {
+			count := len(q.columns)
+			if count > 0 {
+				if q.aliasMode == ColonPrefix { // 使用 NamedValues() 绑定时，如果没有参数，就用 columns
+					q.columns.WriteSQL(buf, q.aliasMode)
+				} else { // 填充 '?'
+					for i := 0; i < count; i++ {
+						buf.WriteByte('?')
+						if i != count-1 {
+							buf.WriteString(", ")
+						}
 					}
 				}
 			}
+		} else if len(q.values) > 0 {
+			q.values.WriteSQL(buf, q.aliasMode)
 		}
-	} else if len(q.values) > 0 {
-		q.values.WriteSQL(buf, q.aliasMode)
+		buf.WriteByte(')')
+	} else { // INSERT INTO ... SELECT ... 和 INSERT INTO ... VALUES ... 是互斥的
+		buf.WriteString(") ")
+		q.selectQuery.WriteSQL(buf, q.aliasMode)
 	}
-	buf.WriteByte(')')
+
 	if len(q.assignments) > 0 {
 		buf.WriteString(" ON DUPLICATE KEY UPDATE ")
 		q.assignments.WriteSQL(buf, NoAlias)

@@ -35,7 +35,7 @@ const Placeholder = Expr("?")
 
 type ConcatExpressions Expressions // 直接输出每个元素
 
-func NewConcatExpressions(expressions ...Expression) ConcatExpressions {
+func Concat(expressions ...Expression) ConcatExpressions {
 	return ConcatExpressions(expressions)
 }
 
@@ -45,20 +45,20 @@ func (e ConcatExpressions) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	}
 }
 
-type Func struct {
+type Function struct {
 	Name        string
 	Expressions Expressions
 	Alias       string
 }
 
-func NewFunc(name string, exps ...Expression) *Func {
-	return &Func{
+func Func(name string, exps ...Expression) *Function {
+	return &Function{
 		Name:        name,
 		Expressions: exps,
 	}
 }
 
-func (f *Func) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
+func (f *Function) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	buf.WriteString(f.Name)
 	buf.WriteByte('(')
 	f.Expressions.WriteSQL(buf, aliasMode)
@@ -70,7 +70,7 @@ func (f *Func) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	}
 }
 
-func (f *Func) As(alias string) *Func {
+func (f *Function) As(alias string) *Function {
 	f.Alias = alias
 	return f
 }

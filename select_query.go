@@ -5,12 +5,12 @@ import (
 	"strconv"
 )
 
-type SelectLockMode uint8
+type LockMode uint8
 
 const (
-	SelectNoLock SelectLockMode = iota
-	SelectForRead
-	SelectForWrite
+	NoLock LockMode = iota
+	LockForShare
+	LockForUpdate
 )
 
 type SelectQuery struct {
@@ -21,7 +21,7 @@ type SelectQuery struct {
 	orderBys    OrderBys
 	limit       uint64
 	offset      uint64
-	lockMode    SelectLockMode
+	lockMode    LockMode
 }
 
 func Select(expressions ...Expression) *SelectQuery {
@@ -75,13 +75,13 @@ func (q *SelectQuery) Offset(offset uint64) *SelectQuery {
 	return q
 }
 
-func (q *SelectQuery) LockForRead() *SelectQuery {
-	q.lockMode = SelectForRead
+func (q *SelectQuery) LockForShare() *SelectQuery {
+	q.lockMode = LockForShare
 	return q
 }
 
-func (q *SelectQuery) LockForWrite() *SelectQuery {
-	q.lockMode = SelectForWrite
+func (q *SelectQuery) LockForUpdate() *SelectQuery {
+	q.lockMode = LockForUpdate
 	return q
 }
 
@@ -108,9 +108,9 @@ func (q *SelectQuery) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 		}
 	}
 	switch q.lockMode {
-	case SelectForRead:
+	case LockForShare:
 		buf.WriteString(" FOR SHARE")
-	case SelectForWrite:
+	case LockForUpdate:
 		buf.WriteString(" FOR UPDATE")
 	}
 }

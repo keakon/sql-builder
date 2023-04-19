@@ -76,7 +76,7 @@ func TestConcatExpressionsWriteSQL(t *testing.T) {
 			expected:    "`col1``col2`",
 		},
 		{
-			expressions: NewConcatExpressions(Expr("1"), Column{name: "col1", alias: "c1"}, Column{name: "col2", table: &Table{name: "test"}}),
+			expressions: Concat(Expr("1"), Column{name: "col1", alias: "c1"}, Column{name: "col2", table: &Table{name: "test"}}),
 			aliasMode:   UseAlias,
 			expected:    "1`c1``test`.`col2`",
 		},

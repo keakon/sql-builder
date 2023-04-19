@@ -1,6 +1,7 @@
 # 设计取舍
 
 1. 因为 MySQL 的语法也有一定复杂性，这里无需实现所有的 MySQL 语句，覆盖现有的大部分语句即可。
+1. 不做过多检查，允许用户构造错误的 SQL。
 1. 为了复用已有代码，可以用本库来生成 SQL 语句，再用 sqlx 做查询和数据绑定等操作。
 1. 在不改动现有 struct 的前提下，需要再创建一个 struct 与 table 进行绑定。由于有别名等存在，需要允许用户修改，这里不建议使用 `go generate` 生成，可以实现一个工具来转换创建表结构的 sql 文件到 go 文件。
 
@@ -22,10 +23,136 @@
 1. 支持 `UPDATE ... SET a=a+?`
 1. 表名可作为占位符，例如 `SELECT 1 FROM %s WHERE id=? FOR UPDATE`
 1. 支持用 `NamedExec` 来批量插入，例如 `INSERT INTO table (a, buf, c) VALUES (:a, :buf, :c)`
-1. 支持同时查询结果和 count
-1. 缓存和预编译 SQL
+1. 支持同时查询结果和 count（暂未实现）
+1. 缓存和预编译 SQL（需搭配 sqlx）
 
 # 部分不支持的特性
 
 1. `UNION` 语句
 2. 复杂的子查询
+
+# 使用
+
+## 定义表结构
+
+```go
+type UserTable struct {
+	Table `db:"user"` // 表名
+	ID    Column `db:"id"`
+	Name  Column // 未写 tag 时，将取小写形式
+	age   Column // 未导出字段忽略
+}
+```
+
+## 创建表对象
+
+```go
+u := New[UserTable]("")   // 无别名
+u2 := New[UserTable]("u2") // 别名为 u2
+u3 := New[UserTable]("u3")
+```
+
+## 查询
+
+* 查询单个表
+	```go
+	Select(u).FromTable(u).String() // SELECT * FROM `user`
+	// 以下示例均省略 .String()
+	Select(u.ID, u.Name).FromTable(u) // SELECT `id`, `name` FROM `user`
+	```
+* 限制返回数
+	```go
+	Select(u).FromTable(u).Limit(10)            // SELECT * FROM `user` LIMIT 10
+	Select(u).FromTable(u).Limit(10).Offset(20) // SELECT * FROM `user` LIMIT 20, 10
+	```
+* 排序
+	```go
+	Select(u).FromTable(u).OrderBy(u.ID.Desc()).OrderBy(u.Name.Asc()) // SELECT * FROM `user` ORDER BY `id` DESC, `name`
+	Select(u).FromTable(u).OrderBy(u.ID.Asc(), u.Name.Desc())         // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
+	```
+* 分组
+	```go
+	Select(u).FromTable(u).GroupBy(u.Name).GroupBy(u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
+	Select(u).FromTable(u).GroupBy(u.Name, u.ID)
+	```
+* 加锁
+	```go
+	Select(u).FromTable(u).LockForShare()  // SELECT * FROM `user` FOR SHARE
+	Select(u).FromTable(u).LockForUpdate() // SELECT * FROM `user` FOR UPDATE
+	```
+* 查询条件
+	```go
+	Select(u).FromTable(u).Where(u.ID.Eq(Expr("1")))   // SELECT * FROM `user` WHERE `id` = 1
+	Select(u).FromTable(u).Where(u.ID.Eq(Placeholder)) // SELECT * FROM `user` WHERE `id` = ?
+	Select(u).FromTable(u).Where(u.ID.Eq(nil))         // SELECT * FROM `user` WHERE `id` IS NULL
+	Select(u).FromTable(u).Where(u.ID.In(Placeholder)) // SELECT * FROM `user` WHERE `id` IN (?)
+	Select(u).FromTable(u).Where(And(u.ID.Eq(Expr("1")), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3"))))) // SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)
+	```
+	可用表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`。
+* Join
+	```go
+	Select(u).From(u.InnerJoin(u2, u.ID.Eq(u2.ID))) // SELECT `user`.* FROM `user` JOIN `user` AS `u2` ON `u`.`id` = `u2`.`id`
+	Select(u, u2.ID.As("other_id")).From(u.LeftJoin(u2, u.Name.Eq(u2.Name)).OuterJoin(u3, u2.ID.Eq(u3.ID))) // SELECT `u`.*, `u2`.`id` AS `other_id` FROM `user` LEFT JOIN `user` AS `u2` ON `u`.`name` = `u2`.`name` OUTER JON `user` AS `u3` ON `u2`.`id` = `u3`.`id`
+	```
+	可用 join 方式有 `InnerJoin`、`LeftJoin`、`RightJoin` 和 `OuterJoin`。
+* 函数
+	```go
+	Select(Func("SUM", u.ID).As("sum"), Func("COUNT", Expr("1"))).FromTable(u)      // SELECT SUM(`id`) AS `sum`, COUNT(1) FROM `user`
+	Select(Func("GROUP_CONCAT", Concat(u.Name, OrderBys{u.ID.Asc()}))).FromTable(u) // SELECT GROUP_CONCAT(`name` ORDER BY `id`) FROM `user`
+	```
+	`Concat` 用于将多个表达式连接起来。
+* 子查询
+	```go
+	Select(Expr("*")).FromTable(u).Where(u.ID.In(Select(Func("DISTINCT", u.ID)).FromTable(u))) // SELECT * FROM `user` WHERE `id` IN (SELECT DISTINCT(`id`) FROM `user`)
+	```
+
+## 插入
+* 插入默认值
+	```go
+	Insert(u)          // INSERT INTO `user` () VALUES ()
+	Insert(u).Ignore() // INSERT IGNORE INTO `user` () VALUES ()
+	```
+* 设置插入值
+	```go
+	Insert(u).Columns(u.ID, u.Name)                           // INSERT INTO `user` (`id`, `name`) VALUES (?, ?)
+	Insert(u).Columns(u.ID, u.Name).Values(nil, Expr(`"1"`))  // INSERT INTO `user` (`id`, `name`) VALUES (NULL, "1")
+	Insert(u).Columns(u.ID, u.Name).NamedValues(u.ID, u.Name) // INSERT INTO `user` (`id`, `name`) VALUES (:id, :name)
+	Insert(u).Columns(u.ID, u.Name).NamedValues()             // 同上，可自动使用 Columns 来作为 NamedValues
+	```
+* 冲突时更新
+	```go
+	Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(Placeholder))) // INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+?
+	```
+	可用的操作有 `Plus`、`Minus`、`Multiply`、`Div` 和 `Mod`。
+* INSERT INTO ... SELECT ...
+	```go
+	Insert(u).Columns(u.ID, u.Name).Select(u, Expr("1"), u.Name) // INSERT INTO `user` (`id`, `name`) SELECT 1, `name` FROM `user`
+	```
+
+## 更新
+* 更新全表
+	```go
+	Update(u).Set(u.Name.Assign(Expr(`"1"`))) // UPDATE `user` SET `name`="1"
+	```
+* 条件更新
+	```go
+	Update(u).Set(u.ID.Assign(u.ID.Plus(Expr("1")))).Where(u.ID.Gt(Placeholder)) // UPDATE `user` SET `name`=`id`+1 WHERE `id` > ?
+	```
+* 限制更新条数
+	```go
+	Update(u).Set(u.ID.Assign(Expr("1"))).OrderBy(u.Name.Asc(), u.ID.Desc()).Limit(10) // UPDATE `user` SET `id`=1 ORDER BY `name`, `id` DESC LIMIT 10
+	```
+
+## 删除
+* 删除全表
+	```go
+	Delete(u) // DELETE `user`
+	```
+* 条件删除全表
+	```go
+	Delete(u).Where(u.ID.Gt(Placeholder)) // DELETE `user` WHERE `id` > ?
+	```
+* 限制删除条数
+	```go
+	Delete(u).OrderBy(u.Name.Asc(), u.ID.Desc()).Limit(10) // DELETE `user` ORDER BY `name`, `id` DESC LIMIT 10
+	```

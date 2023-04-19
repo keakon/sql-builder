@@ -36,6 +36,10 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT * FROM `user`",
 		},
 		{
+			query:    Select(u1.ID, u1.Name).FromTable(u1),
+			expected: "SELECT `id`, `name` FROM `user`",
+		},
+		{
 			query:    Select(u1).FromTable(u1).Limit(10),
 			expected: "SELECT * FROM `user` LIMIT 10",
 		},
@@ -64,11 +68,11 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT * FROM `dept` GROUP BY `name`, `id`",
 		},
 		{
-			query:    Select(u1).FromTable(u1).LockForRead(),
+			query:    Select(u1).FromTable(u1).LockForShare(),
 			expected: "SELECT * FROM `user` FOR SHARE",
 		},
 		{
-			query:    Select(u1).FromTable(u1).LockForWrite(),
+			query:    Select(u1).FromTable(u1).LockForUpdate(),
 			expected: "SELECT * FROM `user` FOR UPDATE",
 		},
 		{
@@ -104,15 +108,15 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT `u1`.* FROM `user` AS `u1` JOIN `dept_user` AS `du` ON `u1`.`id` = `du`.`userid` LEFT JOIN `dept` AS `d1` ON `d1`.`id` = `du`.`deptid`",
 		},
 		{
-			query:    Select(NewFunc("SUM", u1.ID).As("sum"), NewFunc("COUNT", Expr("1"))).FromTable(u1),
+			query:    Select(Func("SUM", u1.ID).As("sum"), Func("COUNT", Expr("1"))).FromTable(u1),
 			expected: "SELECT SUM(`id`) AS `sum`, COUNT(1) FROM `user`",
 		},
 		{
-			query:    Select(NewFunc("GROUP_CONCAT", NewConcatExpressions(u1.Name, OrderBys{u1.ID.Asc()}))).FromTable(u1),
+			query:    Select(Func("GROUP_CONCAT", Concat(u1.Name, OrderBys{u1.ID.Asc()}))).FromTable(u1),
 			expected: "SELECT GROUP_CONCAT(`name` ORDER BY `id`) FROM `user`",
 		},
 		{
-			query:    Select(Expr("*")).FromTable(u1).Where(u1.ID.In(Select(NewFunc("DISTINCT", du.UserID)).FromTable(du))),
+			query:    Select(Expr("*")).FromTable(u1).Where(u1.ID.In(Select(Func("DISTINCT", du.UserID)).FromTable(du))),
 			expected: "SELECT * FROM `user` WHERE `id` IN (SELECT DISTINCT(`userid`) FROM `dept_user`)",
 		},
 	}
