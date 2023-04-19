@@ -6,4 +6,5 @@ const (
 	NoAlias AliasMode = iota
 	UseAlias
 	OnlyAlias
+	ColonPrefix
 )

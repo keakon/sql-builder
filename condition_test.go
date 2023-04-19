@@ -30,9 +30,30 @@ func TestConditionWriteSQL(t *testing.T) {
 		{
 			op:        "=",
 			lv:        Expr("1"),
-			rv:        nil,
+			rv:        Placeholder,
 			aliasMode: NoAlias,
 			expected:  "1 = ?",
+		},
+		{
+			op:        "=",
+			lv:        Expr("1"),
+			rv:        nil,
+			aliasMode: NoAlias,
+			expected:  "1 IS NULL",
+		},
+		{
+			op:        "!=",
+			lv:        Expr("1"),
+			rv:        nil,
+			aliasMode: NoAlias,
+			expected:  "1 IS NOT NULL",
+		},
+		{
+			op:        ">",
+			lv:        Expr("1"),
+			rv:        nil,
+			aliasMode: NoAlias,
+			expected:  "1 > NULL",
 		},
 		{
 			op:        "=",
@@ -95,6 +116,13 @@ func TestConditionWriteSQL(t *testing.T) {
 			lv:        Column{name: "col1"},
 			rv:        nil,
 			aliasMode: NoAlias,
+			expected:  "`col1` IS NULL",
+		},
+		{
+			op:        "=",
+			lv:        Column{name: "col1"},
+			rv:        Placeholder,
+			aliasMode: NoAlias,
 			expected:  "`col1` = ?",
 		},
 		{
@@ -131,6 +159,20 @@ func TestConditionWriteSQL(t *testing.T) {
 			rv:        Column{name: "col2", alias: "c2", table: &table2},
 			aliasMode: UseAlias,
 			expected:  "`test`.`col1` = `c2`",
+		},
+		{
+			op:        "IN",
+			lv:        Column{name: "col1"},
+			rv:        Placeholder,
+			aliasMode: NoAlias,
+			expected:  "`col1` IN (?)",
+		},
+		{
+			op:        "NOT IN",
+			lv:        Column{name: "col1"},
+			rv:        Expressions{Expr("1"), Expr("2")},
+			aliasMode: NoAlias,
+			expected:  "`col1` NOT IN (1, 2)",
 		},
 	}
 

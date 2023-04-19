@@ -13,11 +13,7 @@ const (
 	SelectForWrite
 )
 
-type Query interface {
-}
-
 type SelectQuery struct {
-	buf         bytes.Buffer
 	expressions Expressions
 	from        *FromTables
 	where       Cond
@@ -119,7 +115,7 @@ func (q *SelectQuery) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	}
 }
 
-func (q *SelectQuery) ToSQL() string {
+func (q *SelectQuery) String() string {
 	buf := pool.Get().(*bytes.Buffer)
 	buf.Reset()
 

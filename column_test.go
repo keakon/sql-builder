@@ -91,6 +91,13 @@ func TestColumnWriteSQL(t *testing.T) {
 			aliasMode: UseAlias,
 			expected:  "`t`.`col`",
 		},
+		{
+			name:      "col",
+			alias:     "",
+			table:     &Table{name: "test", alias: "t"},
+			aliasMode: ColonPrefix,
+			expected:  ":col",
+		},
 	}
 
 	for _, test := range tests {

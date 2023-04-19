@@ -5,6 +5,8 @@ import "bytes"
 const (
 	opIn    = "IN"
 	opNotIn = "NOT IN"
+	opEq    = "="
+	opNe    = "!="
 )
 
 type Cond interface {
@@ -30,10 +32,20 @@ func (c Condition) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	}
 
 	c.lv.WriteSQL(buf, aliasMode)
+	if c.rv == nil { // "= nil" -> "IS NULL", "!= nil" -> "IS NOT NULL"
+		if c.op == opEq {
+			buf.WriteString(" IS NULL")
+			return
+		} else if c.op == opNe {
+			buf.WriteString(" IS NOT NULL")
+			return
+		}
+	}
+
 	buf.WriteByte(' ')
 	buf.WriteString(c.op)
 	buf.WriteByte(' ')
-	if c.rv == nil {
+	if c.rv == Placeholder {
 		if c.op == opIn || c.op == opNotIn {
 			buf.WriteString("(?)")
 		} else {
@@ -47,7 +59,11 @@ func (c Condition) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 		if needBracket {
 			buf.WriteByte('(')
 		}
-		c.rv.WriteSQL(buf, aliasMode)
+		if c.rv == nil {
+			buf.WriteString("NULL")
+		} else {
+			c.rv.WriteSQL(buf, aliasMode)
+		}
 		if needBracket {
 			buf.WriteByte(')')
 		}

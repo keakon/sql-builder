@@ -13,7 +13,11 @@ func (e Expressions) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	if length > 0 {
 		lastIndex := length - 1
 		for i := 0; i < length; i++ {
-			e[i].WriteSQL(buf, aliasMode)
+			if e[i] == nil {
+				buf.WriteString("NULL")
+			} else {
+				e[i].WriteSQL(buf, aliasMode)
+			}
 			if i != lastIndex {
 				buf.WriteString(", ")
 			}
@@ -26,6 +30,8 @@ type Expr string
 func (e Expr) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	buf.WriteString(string(e))
 }
+
+const Placeholder = Expr("?")
 
 type ConcatExpressions Expressions // 直接输出每个元素
 

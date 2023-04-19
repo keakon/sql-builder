@@ -20,7 +20,7 @@ type DeptUserTable struct {
 	UserID Column
 }
 
-func TestQuery(t *testing.T) {
+func TestSelectQuery(t *testing.T) {
 	u1 := New[UserTable]("u1")
 	u2 := New[UserTable]("u2")
 	d1 := New[DeptTable]("d1")
@@ -80,11 +80,15 @@ func TestQuery(t *testing.T) {
 			expected: "SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)",
 		},
 		{
-			query:    Select(u1).FromTable(u1).Where(u1.ID.Eq(nil)),
+			query:    Select(u1).FromTable(u1).Where(u1.ID.Eq(Placeholder)),
 			expected: "SELECT * FROM `user` WHERE `id` = ?",
 		},
 		{
-			query:    Select(u1).FromTable(u1).Where(u1.ID.In(nil)),
+			query:    Select(u1).FromTable(u1).Where(u1.ID.Eq(nil)),
+			expected: "SELECT * FROM `user` WHERE `id` IS NULL",
+		},
+		{
+			query:    Select(u1).FromTable(u1).Where(u1.ID.In(Placeholder)),
 			expected: "SELECT * FROM `user` WHERE `id` IN (?)",
 		},
 		{
@@ -115,7 +119,7 @@ func TestQuery(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.expected, func(t *testing.T) {
-			if got := test.query.ToSQL(); got != test.expected {
+			if got := test.query.String(); got != test.expected {
 				t.Errorf("got %s, want %s", got, test.expected)
 			}
 		})

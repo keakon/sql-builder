@@ -63,6 +63,12 @@ func (c Column) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 		buf.WriteByte('`')
 		buf.WriteString(c.name)
 		buf.WriteByte('`')
+	case ColonPrefix:
+		if c.name == "" { // 正常情况不会遇到，除非手动构建
+			return
+		}
+		buf.WriteByte(':')
+		buf.WriteString(c.name) // TODO: 是否要转义？
 	}
 }
 
