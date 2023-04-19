@@ -68,7 +68,7 @@ func (c Column) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 			return
 		}
 		buf.WriteByte(':')
-		buf.WriteString(c.name) // TODO: 是否要转义？
+		buf.WriteString(c.name) // sqlx 会处理，无需转义
 	}
 }
 
@@ -110,6 +110,30 @@ func (c *Column) Asc() OrderBy {
 
 func (c *Column) Desc() OrderBy {
 	return OrderBy{column: c, desc: true}
+}
+
+func (c *Column) Assign(e Expression) Assignment {
+	return Assignment{column: c, value: e}
+}
+
+func (c *Column) Plus(e Expression) Operation {
+	return Operation{op: "+", lv: c, rv: e}
+}
+
+func (c *Column) Minus(e Expression) Operation {
+	return Operation{op: "-", lv: c, rv: e}
+}
+
+func (c *Column) Multiply(e Expression) Operation {
+	return Operation{op: "*", lv: c, rv: e}
+}
+
+func (c *Column) Div(e Expression) Operation {
+	return Operation{op: "/", lv: c, rv: e}
+}
+
+func (c *Column) Mod(e Expression) Operation {
+	return Operation{op: "%", lv: c, rv: e}
 }
 
 type Columns []Column

@@ -5,11 +5,12 @@ import (
 )
 
 type InsertQuery struct {
-	ignore    bool
-	table     AnyTable
-	columns   Columns
-	values    Expressions
-	aliasMode AliasMode // of values
+	table       AnyTable
+	columns     Columns
+	values      Expressions
+	assignments Assignments
+	aliasMode   AliasMode // of values
+	ignore      bool
 }
 
 func Insert(table AnyTable) *InsertQuery {
@@ -34,6 +35,11 @@ func (q *InsertQuery) Values(values ...Expression) *InsertQuery {
 func (q *InsertQuery) NamedValues(values ...Expression) *InsertQuery {
 	q.values = values
 	q.aliasMode = ColonPrefix
+	return q
+}
+
+func (q *InsertQuery) OnDuplicateKeyUpdate(assignments ...Assignment) *InsertQuery {
+	q.assignments = assignments
 	return q
 }
 
@@ -65,6 +71,10 @@ func (q *InsertQuery) WriteSQL(buf *bytes.Buffer) {
 		q.values.WriteSQL(buf, q.aliasMode)
 	}
 	buf.WriteByte(')')
+	if len(q.assignments) > 0 {
+		buf.WriteString(" ON DUPLICATE KEY UPDATE ")
+		q.assignments.WriteSQL(buf, NoAlias)
+	}
 }
 
 func (q *InsertQuery) String() string {

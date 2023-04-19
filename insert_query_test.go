@@ -41,6 +41,22 @@ func TestInsertQuery(t *testing.T) {
 			query:    Insert(u).Columns(u.ID, u.Name).NamedValues(),
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (:id, :name)",
 		},
+		{
+			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.Name.Assign(Expr(`"1"`))),
+			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name`=\"1\"",
+		},
+		{
+			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(Expr("1")))),
+			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+1",
+		},
+		{
+			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(Placeholder))),
+			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+?",
+		},
+		{
+			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.Name.Assign(u.Name.Plus(u.ID))),
+			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name`=`name`+`id`",
+		},
 	}
 
 	for _, test := range tests {
