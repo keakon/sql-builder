@@ -40,6 +40,10 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT `id`, `name` FROM `user`",
 		},
 		{
+			query:    u1.Select(u1.ID, u1.Name),
+			expected: "SELECT `id`, `name` FROM `user`",
+		},
+		{
 			query:    Select(u1).From(u1).Limit(10),
 			expected: "SELECT * FROM `user` LIMIT 10",
 		},
@@ -84,7 +88,7 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)",
 		},
 		{
-			query:    Select(u1).From(u1).Where(u1.ID.Eq(Placeholder)),
+			query:    Select(u1).From(u1).Where(u1.ID.Eq(PH)),
 			expected: "SELECT * FROM `user` WHERE `id` = ?",
 		},
 		{
@@ -92,7 +96,7 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT * FROM `user` WHERE `id` IS NULL",
 		},
 		{
-			query:    Select(u1).From(u1).Where(u1.ID.In(Placeholder)),
+			query:    Select(u1).From(u1).Where(u1.ID.In(PH)),
 			expected: "SELECT * FROM `user` WHERE `id` IN (?)",
 		},
 		{

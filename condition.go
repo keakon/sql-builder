@@ -45,7 +45,7 @@ func (c Condition) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	buf.WriteByte(' ')
 	buf.WriteString(c.op)
 	buf.WriteByte(' ')
-	if c.rv == Placeholder {
+	if c.rv == PH {
 		if c.op == opIn || c.op == opNotIn {
 			buf.WriteString("(?)")
 		} else {

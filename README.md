@@ -24,7 +24,7 @@
 1. 表名可作为占位符，例如 `SELECT 1 FROM %s WHERE id=? FOR UPDATE`
 1. 支持用 `NamedExec` 来批量插入，例如 `INSERT INTO table (a, buf, c) VALUES (:a, :buf, :c)`
 1. 支持同时查询结果和 count（暂未实现）
-1. 缓存和预编译 SQL（需搭配 sqlx）
+1. 缓存和预编译 SQL（需搭配 sqlx，实测对于简单的语句，预编译后提升大概 3%，作用不大）
 
 # 部分不支持的特性
 
@@ -59,6 +59,7 @@ u3 := New[UserTable]("u3")
 	Select(u).From(u).String() // SELECT * FROM `user`
 	// 以下示例均省略 .String()
 	Select(u.ID, u.Name).From(u) // SELECT `id`, `name` FROM `user`
+	u.Select(u.ID, u.Name) // 同上
 	```
 * 限制返回数
 	```go
@@ -82,13 +83,13 @@ u3 := New[UserTable]("u3")
 	```
 * 查询条件
 	```go
-	Select(u).From(u).Where(u.ID.Eq(Expr("1")))   // SELECT * FROM `user` WHERE `id` = 1
-	Select(u).From(u).Where(u.ID.Eq(Placeholder)) // SELECT * FROM `user` WHERE `id` = ?
-	Select(u).From(u).Where(u.ID.Eq(nil))         // SELECT * FROM `user` WHERE `id` IS NULL
-	Select(u).From(u).Where(u.ID.In(Placeholder)) // SELECT * FROM `user` WHERE `id` IN (?)
+	Select(u).From(u).Where(u.ID.Eq(Expr("1"))) // SELECT * FROM `user` WHERE `id` = 1
+	Select(u).From(u).Where(u.ID.Eq(PH))        // SELECT * FROM `user` WHERE `id` = ?
+	Select(u).From(u).Where(u.ID.Eq(nil))       // SELECT * FROM `user` WHERE `id` IS NULL
+	Select(u).From(u).Where(u.ID.In(PH))        // SELECT * FROM `user` WHERE `id` IN (?)
 	Select(u).From(u).Where(And(u.ID.Eq(Expr("1")), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3"))))) // SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)
 	```
-	可用表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`。
+	可用表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`。`PH` 是占位符的缩写。
 * Join
 	```go
 	Select(u).FromJoin(u.InnerJoin(u2, u.ID.Eq(u2.ID))) // SELECT `user`.* FROM `user` JOIN `user` AS `u2` ON `u`.`id` = `u2`.`id`
@@ -110,6 +111,7 @@ u3 := New[UserTable]("u3")
 * 插入默认值
 	```go
 	Insert(u)          // INSERT INTO `user` () VALUES ()
+	u.Insert()         // 同上
 	Insert(u).Ignore() // INSERT IGNORE INTO `user` () VALUES ()
 	```
 * 设置插入值
@@ -122,7 +124,7 @@ u3 := New[UserTable]("u3")
 	当不提供 `Values` 时，会自动根据 `Columns` 的数量生成相应数量的占位符。
 * 冲突时更新
 	```go
-	Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(Placeholder))) // INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+?
+	Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(PH))) // INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+?
 	```
 	可用的操作有 `Plus`、`Minus`、`Multiply`、`Div` 和 `Mod`。
 * INSERT INTO ... SELECT ...
@@ -134,10 +136,11 @@ u3 := New[UserTable]("u3")
 * 更新全表
 	```go
 	Update(u).Set(u.Name.Assign(Expr(`"1"`))) // UPDATE `user` SET `name`="1"
+	u.Update(u.ID.Assign(Expr("1")))          // UPDATE `user` SET `id`=1
 	```
 * 条件更新
 	```go
-	Update(u).Set(u.ID.Assign(u.ID.Plus(Expr("1")))).Where(u.ID.Gt(Placeholder)) // UPDATE `user` SET `name`=`id`+1 WHERE `id` > ?
+	Update(u).Set(u.ID.Assign(u.ID.Plus(Expr("1")))).Where(u.ID.Gt(PH)) // UPDATE `user` SET `name`=`id`+1 WHERE `id` > ?
 	```
 * 限制更新条数
 	```go
@@ -147,11 +150,12 @@ u3 := New[UserTable]("u3")
 ## 删除
 * 删除全表
 	```go
-	Delete(u) // DELETE `user`
+	Delete(u)  // DELETE `user`
+	u.Delete() // 同上
 	```
 * 条件删除全表
 	```go
-	Delete(u).Where(u.ID.Gt(Placeholder)) // DELETE `user` WHERE `id` > ?
+	Delete(u).Where(u.ID.Gt(PH)) // DELETE `user` WHERE `id` > ?
 	```
 * 限制删除条数
 	```go

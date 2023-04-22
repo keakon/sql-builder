@@ -25,7 +25,7 @@ func TestOperationWriteSQL(t *testing.T) {
 		{
 			op:        "-",
 			lv:        Column{name: "col1"},
-			rv:        Placeholder,
+			rv:        PH,
 			aliasMode: NoAlias,
 			expected:  "`col1`-?",
 		},

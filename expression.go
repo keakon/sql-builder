@@ -31,7 +31,7 @@ func (e Expr) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	buf.WriteString(string(e))
 }
 
-const Placeholder = Expr("?")
+const PH = Expr("?") // Placeholder 缩写
 
 type ConcatExpressions Expressions // 直接输出每个元素
 

@@ -22,7 +22,7 @@ func TestAssignmentWriteSQL(t *testing.T) {
 		},
 		{
 			column:    Column{name: "col1"},
-			value:     Placeholder,
+			value:     PH,
 			aliasMode: NoAlias,
 			expected:  "`col1`=?",
 		},
@@ -66,7 +66,7 @@ func TestAssignmentsWriteSQL(t *testing.T) {
 			expected:    "`col1`=1",
 		},
 		{
-			assignments: Assignments{{&Column{name: "col1", alias: "c1"}, Placeholder}, {&Column{name: "col2"}, (&Column{name: "col2"}).Plus(Column{name: "col3"})}},
+			assignments: Assignments{{&Column{name: "col1", alias: "c1"}, PH}, {&Column{name: "col2"}, (&Column{name: "col2"}).Plus(Column{name: "col3"})}},
 			aliasMode:   NoAlias,
 			expected:    "`col1`=?, `col2`=`col2`+`col3`",
 		},

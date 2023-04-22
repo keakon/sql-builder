@@ -14,6 +14,10 @@ func TestInsertQuery(t *testing.T) {
 			expected: "INSERT INTO `user` () VALUES ()",
 		},
 		{
+			query:    u.Insert(),
+			expected: "INSERT INTO `user` () VALUES ()",
+		},
+		{
 			query:    Insert(u).Ignore(),
 			expected: "INSERT IGNORE INTO `user` () VALUES ()",
 		},
@@ -26,7 +30,7 @@ func TestInsertQuery(t *testing.T) {
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?)",
 		},
 		{
-			query:    Insert(u).Columns(u.ID, u.Name).Values(Placeholder),
+			query:    Insert(u).Columns(u.ID, u.Name).Values(PH),
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?)", // 这是一个错误的 SQL，只用于测试能否正确生成
 		},
 		{
@@ -50,7 +54,7 @@ func TestInsertQuery(t *testing.T) {
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+1",
 		},
 		{
-			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(Placeholder))),
+			query:    Insert(u).Columns(u.ID, u.Name).OnDuplicateKeyUpdate(u.ID.Assign(u.ID.Plus(PH))),
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`+?",
 		},
 		{

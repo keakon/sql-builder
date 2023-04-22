@@ -31,6 +31,22 @@ func (t Table) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	}
 }
 
+func (t Table) Select(expressions ...Expression) *SelectQuery {
+	return Select(expressions...).From(t)
+}
+
+func (t Table) Update(assignments ...Assignment) *UpdateQuery {
+	return Update(t).Set(assignments...)
+}
+
+func (t Table) Insert() *InsertQuery {
+	return Insert(t)
+}
+
+func (t Table) Delete() *DeleteQuery {
+	return Delete(t)
+}
+
 type AnyTable interface {
 	getName() string
 	getAlias() string

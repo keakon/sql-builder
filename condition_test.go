@@ -30,7 +30,7 @@ func TestConditionWriteSQL(t *testing.T) {
 		{
 			op:        "=",
 			lv:        Expr("1"),
-			rv:        Placeholder,
+			rv:        PH,
 			aliasMode: NoAlias,
 			expected:  "1 = ?",
 		},
@@ -121,7 +121,7 @@ func TestConditionWriteSQL(t *testing.T) {
 		{
 			op:        "=",
 			lv:        Column{name: "col1"},
-			rv:        Placeholder,
+			rv:        PH,
 			aliasMode: NoAlias,
 			expected:  "`col1` = ?",
 		},
@@ -163,7 +163,7 @@ func TestConditionWriteSQL(t *testing.T) {
 		{
 			op:        "IN",
 			lv:        Column{name: "col1"},
-			rv:        Placeholder,
+			rv:        PH,
 			aliasMode: NoAlias,
 			expected:  "`col1` IN (?)",
 		},

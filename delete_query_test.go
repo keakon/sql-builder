@@ -14,7 +14,11 @@ func TestDeleteQuery(t *testing.T) {
 			expected: "DELETE `user`",
 		},
 		{
-			query:    Delete(u).Where(u.ID.Gt(Placeholder)),
+			query:    u.Delete(),
+			expected: "DELETE `user`",
+		},
+		{
+			query:    Delete(u).Where(u.ID.Gt(PH)),
 			expected: "DELETE `user` WHERE `id` > ?",
 		},
 		{

@@ -14,7 +14,11 @@ func TestUpdateQuery(t *testing.T) {
 			expected: "UPDATE `user` SET `name`=\"1\"",
 		},
 		{
-			query:    Update(u).Set(u.ID.Assign(u.ID.Plus(Expr("1")))).Where(u.ID.Gt(Placeholder)),
+			query:    u.Update(u.ID.Assign(Expr(`1`))),
+			expected: "UPDATE `user` SET `id`=1",
+		},
+		{
+			query:    Update(u).Set(u.ID.Assign(u.ID.Plus(Expr("1")))).Where(u.ID.Gt(PH)),
 			expected: "UPDATE `user` SET `id`=`id`+1 WHERE `id` > ?",
 		},
 		{
