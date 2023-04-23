@@ -83,11 +83,13 @@ func New[T AnyTable](alias string) *T {
 			f := rv.Field(i)
 			if f.Type() == columnType {
 				fi := rt.Field(i)
-				name := fi.Tag.Get("db")
-				if name == "" {
-					name = strings.ToLower(fi.Name)
+				if fi.IsExported() {
+					name := fi.Tag.Get("db")
+					if name == "" {
+						name = strings.ToLower(fi.Name)
+					}
+					f.Set(reflect.ValueOf(Column{name: name, table: &table}))
 				}
-				f.Set(reflect.ValueOf(Column{name: name, table: &table}))
 			}
 		}
 	}

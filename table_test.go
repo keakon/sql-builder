@@ -9,6 +9,7 @@ type TestTable struct {
 	Table    `db:"test"`
 	ID       Column `json:"id" db:"id"`
 	UserName Column
+	age      Column
 }
 
 func TestTableWriteSQL(t *testing.T) {
@@ -77,6 +78,12 @@ func TestNewTable(t *testing.T) {
 			}
 			if *table.UserName.table != table.Table {
 				t.Errorf("got %v, want %v", *table.UserName.table, table.Table)
+			}
+			if table.age.name != "" {
+				t.Errorf("got %s, want %s", table.age.name, "")
+			}
+			if table.age.table != nil {
+				t.Errorf("got %v, want nil", table.age.table)
 			}
 		})
 	}

@@ -88,10 +88,10 @@ u3 := New[UserTable]("u3")
 	u.Select().Where(u.ID.Eq(PH))        // SELECT * FROM `user` WHERE `id` = ?
 	u.Select().Where(u.ID.Eq(nil))       // SELECT * FROM `user` WHERE `id` IS NULL
 	u.Select().Where(u.ID.In(PH))        // SELECT * FROM `user` WHERE `id` IN (?)
-	u.Select().Where(And(u.ID.Eq(Expr("1")), u1.Name.Eq(PH), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3")))))   // SELECT * FROM `user` WHERE `id` = 1 AND `name` = ? AND (`id` != 2 OR `id` > 3)
-	u.Select().Where(u.ID.Eq(Expr("1")).And(u1.Name.Eq(PH)).And(u.ID.Ne(Expr("2")).Or(u.ID.Gt(Expr("3"))))) // 同上
+	u.Select().Where(And(u.ID.Eq(Expr("1")), u1.Name.Eq(PH), Not(Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3"))))))    // SELECT * FROM `user` WHERE `id` = 1 AND `name` = ? AND (NOT (`id` != 2 OR `id` > 3))
+	u.Select().Where(u.ID.Eq(Expr("1")).And(u1.Name.Eq(PH)).And(u.ID.Ne(Expr("2")).Or(u.ID.Gt(Expr("3")))).Not()) // 同上
 	```
-	可用表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`。`PH` 是占位符的缩写。
+	可用比较表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`，逻辑表达式有 `And`、`Or` 和 `Not`。`PH` 是占位符的缩写。
 * Join
 	```go
 	Select(u).FromJoin(u.InnerJoin(u2, u.ID.Eq(u2.ID))) // SELECT `user`.* FROM `user` JOIN `user` AS `u2` ON `u`.`id` = `u2`.`id`

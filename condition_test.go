@@ -187,3 +187,52 @@ func TestConditionWriteSQL(t *testing.T) {
 		})
 	}
 }
+
+func TestConditionsWriteSQL(t *testing.T) {
+	buf := bytes.NewBuffer(make([]byte, 0, bufferSize))
+	c := &Column{name: "col"}
+
+	tests := []struct {
+		conditions Conditions
+		expected   string
+	}{
+		{
+			conditions: c.Ge(Expr("1")).And(c.Le(Expr("2"))),
+			expected:   "(`col` >= 1 AND `col` <= 2)",
+		},
+		{
+			conditions: And(c.Ge(Expr("1")), c.Le(Expr("2"))),
+			expected:   "(`col` >= 1 AND `col` <= 2)",
+		},
+		{
+			conditions: c.Ge(Expr("1")).And(c.Le(Expr("2"))).Not(),
+			expected:   "(NOT (`col` >= 1 AND `col` <= 2))",
+		},
+		{
+			conditions: c.Ge(Expr("1")).Or(c.Le(Expr("2"))),
+			expected:   "(`col` >= 1 OR `col` <= 2)",
+		},
+		{
+			conditions: Or(c.Ge(Expr("1")), c.Le(Expr("2"))),
+			expected:   "(`col` >= 1 OR `col` <= 2)",
+		},
+		{
+			conditions: Not(Or(c.Ge(Expr("1")), c.Le(Expr("2")))),
+			expected:   "(NOT (`col` >= 1 OR `col` <= 2))",
+		},
+		{
+			conditions: c.Ge(Expr("1")).Not().And(c.Le(Expr("2")).Or(c.Eq(PH).Not())),
+			expected:   "((NOT `col` >= 1) AND (`col` <= 2 OR (NOT `col` = ?)))",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.expected, func(t *testing.T) {
+			buf.Reset()
+			test.conditions.WriteSQL(buf, NoAlias)
+			if got := buf.String(); got != test.expected {
+				t.Errorf("got %s, want %s", got, test.expected)
+			}
+		})
+	}
+}
