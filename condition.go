@@ -109,7 +109,7 @@ func (c Conditions) And(cond Cond) Conditions {
 	}
 
 	conds, ok := cond.(Conditions)
-	if ok { // 类型相同时合并元素
+	if ok && !conds.isDisjunction { // 类型相同时合并元素
 		c.conditions = append(c.conditions, conds.conditions...)
 	} else {
 		c.conditions = append(c.conditions, cond)
@@ -126,7 +126,7 @@ func (c Conditions) Or(cond Cond) Conditions {
 	}
 
 	conds, ok := cond.(Conditions)
-	if ok { // 类型相同时合并元素
+	if ok && conds.isDisjunction { // 类型相同时合并元素
 		c.conditions = append(c.conditions, conds.conditions...)
 	} else {
 		c.conditions = append(c.conditions, cond)
