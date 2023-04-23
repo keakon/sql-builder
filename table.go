@@ -32,6 +32,9 @@ func (t Table) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 }
 
 func (t Table) Select(expressions ...Expression) *SelectQuery {
+	if len(expressions) == 0 {
+		return Select(t).From(t)
+	}
 	return Select(expressions...).From(t)
 }
 

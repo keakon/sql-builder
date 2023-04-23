@@ -22,6 +22,29 @@ type Condition struct {
 
 func (c Condition) isCond() {}
 
+func (c Condition) And(cond Cond) Conditions {
+	conds, ok := cond.(Conditions)
+	if ok && !conds.isDisjunction { // 类型相同时合并
+		conds.conditions = Prepend[Cond](conds.conditions, c)
+		return conds
+	}
+	return Conditions{
+		conditions: []Cond{c, cond},
+	}
+}
+
+func (c Condition) Or(cond Cond) Conditions {
+	conds, ok := cond.(Conditions)
+	if ok && conds.isDisjunction { // 类型相同时合并
+		conds.conditions = Prepend[Cond](conds.conditions, c)
+		return conds
+	}
+	return Conditions{
+		conditions:    []Cond{c, cond},
+		isDisjunction: true,
+	}
+}
+
 func (c Condition) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	if c.lv == nil { // 正常情况不会遇到，除非手动构建
 		return
@@ -78,6 +101,39 @@ type Conditions struct {
 
 func (c Conditions) isCond() {}
 
+func (c Conditions) And(cond Cond) Conditions {
+	if c.isDisjunction {
+		return Conditions{
+			conditions: []Cond{c, cond},
+		}
+	}
+
+	conds, ok := cond.(Conditions)
+	if ok { // 类型相同时合并元素
+		c.conditions = append(c.conditions, conds.conditions...)
+	} else {
+		c.conditions = append(c.conditions, cond)
+	}
+	return c
+}
+
+func (c Conditions) Or(cond Cond) Conditions {
+	if !c.isDisjunction {
+		return Conditions{
+			conditions:    []Cond{c, cond},
+			isDisjunction: true,
+		}
+	}
+
+	conds, ok := cond.(Conditions)
+	if ok { // 类型相同时合并元素
+		c.conditions = append(c.conditions, conds.conditions...)
+	} else {
+		c.conditions = append(c.conditions, cond)
+	}
+	return c
+}
+
 func (c Conditions) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	length := len(c.conditions)
 	if length > 0 {
@@ -103,6 +159,7 @@ func (c Conditions) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	}
 }
 
+// TODO: 合并相同类型
 func And(conditions ...Cond) Conditions {
 	return Conditions{
 		isDisjunction: false,

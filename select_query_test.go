@@ -36,6 +36,10 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT * FROM `user`",
 		},
 		{
+			query:    u1.Select(),
+			expected: "SELECT * FROM `user`",
+		},
+		{
 			query:    Select(u1.ID, u1.Name).From(u1),
 			expected: "SELECT `id`, `name` FROM `user`",
 		},
@@ -84,8 +88,12 @@ func TestSelectQuery(t *testing.T) {
 			expected: "SELECT * FROM `user` WHERE `id` = 1",
 		},
 		{
-			query:    Select(u1).From(u1).Where(And(u1.ID.Eq(Expr("1")), Or(u1.ID.Ne(Expr("2")), u1.ID.Gt(Expr("3"))))),
-			expected: "SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)",
+			query:    Select(u1).From(u1).Where(And(u1.ID.Eq(Expr("1")), u1.Name.Eq(PH), Or(u1.ID.Ne(Expr("2")), u1.ID.Gt(Expr("3"))))),
+			expected: "SELECT * FROM `user` WHERE `id` = 1 AND `name` = ? AND (`id` != 2 OR `id` > 3)",
+		},
+		{
+			query:    Select(u1).From(u1).Where(u1.ID.Eq(Expr("1")).And(u1.Name.Eq(PH)).And(u1.ID.Ne(Expr("2")).Or(u1.ID.Gt(Expr("3"))))),
+			expected: "SELECT * FROM `user` WHERE `id` = 1 AND `name` = ? AND (`id` != 2 OR `id` > 3)",
 		},
 		{
 			query:    Select(u1).From(u1).Where(u1.ID.Eq(PH)),

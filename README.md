@@ -58,36 +58,38 @@ u3 := New[UserTable]("u3")
 	```go
 	Select(u).From(u).String() // SELECT * FROM `user`
 	// 以下示例均省略 .String()
+	u.Select() // SELECT * FROM `user`
 	Select(u.ID, u.Name).From(u) // SELECT `id`, `name` FROM `user`
 	u.Select(u.ID, u.Name) // 同上
 	```
 * 限制返回数
 	```go
-	Select(u).From(u).Limit(10)            // SELECT * FROM `user` LIMIT 10
-	Select(u).From(u).Limit(10).Offset(20) // SELECT * FROM `user` LIMIT 20, 10
+	u.Select().Limit(10)            // SELECT * FROM `user` LIMIT 10
+	u.Select().Limit(10).Offset(20) // SELECT * FROM `user` LIMIT 20, 10
 	```
 * 排序
 	```go
-	Select(u).From(u).OrderBy(u.ID.Desc()).OrderBy(u.Name.Asc()) // SELECT * FROM `user` ORDER BY `id` DESC, `name`
-	Select(u).From(u).OrderBy(u.ID.Asc(), u.Name.Desc())         // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
+	u.Select().OrderBy(u.ID.Desc()).OrderBy(u.Name.Asc()) // SELECT * FROM `user` ORDER BY `id` DESC, `name`
+	u.Select().OrderBy(u.ID.Asc(), u.Name.Desc())         // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
 	```
 * 分组
 	```go
-	Select(u).From(u).GroupBy(u.Name).GroupBy(u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
-	Select(u).From(u).GroupBy(u.Name, u.ID)
+	u.Select().GroupBy(u.Name).GroupBy(u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
+	u.Select().GroupBy(u.Name, u.ID)
 	```
 * 加锁
 	```go
-	Select(u).From(u).LockForShare()  // SELECT * FROM `user` FOR SHARE
-	Select(u).From(u).LockForUpdate() // SELECT * FROM `user` FOR UPDATE
+	u.Select().LockForShare()  // SELECT * FROM `user` FOR SHARE
+	u.Select().LockForUpdate() // SELECT * FROM `user` FOR UPDATE
 	```
 * 查询条件
 	```go
-	Select(u).From(u).Where(u.ID.Eq(Expr("1"))) // SELECT * FROM `user` WHERE `id` = 1
-	Select(u).From(u).Where(u.ID.Eq(PH))        // SELECT * FROM `user` WHERE `id` = ?
-	Select(u).From(u).Where(u.ID.Eq(nil))       // SELECT * FROM `user` WHERE `id` IS NULL
-	Select(u).From(u).Where(u.ID.In(PH))        // SELECT * FROM `user` WHERE `id` IN (?)
-	Select(u).From(u).Where(And(u.ID.Eq(Expr("1")), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3"))))) // SELECT * FROM `user` WHERE `id` = 1 AND (`id` != 2 OR `id` > 3)
+	u.Select().Where(u.ID.Eq(Expr("1"))) // SELECT * FROM `user` WHERE `id` = 1
+	u.Select().Where(u.ID.Eq(PH))        // SELECT * FROM `user` WHERE `id` = ?
+	u.Select().Where(u.ID.Eq(nil))       // SELECT * FROM `user` WHERE `id` IS NULL
+	u.Select().Where(u.ID.In(PH))        // SELECT * FROM `user` WHERE `id` IN (?)
+	u.Select().Where(And(u.ID.Eq(Expr("1")), u1.Name.Eq(PH), Or(u.ID.Ne(Expr("2")), u.ID.Gt(Expr("3")))))   // SELECT * FROM `user` WHERE `id` = 1 AND `name` = ? AND (`id` != 2 OR `id` > 3)
+	u.Select().Where(u.ID.Eq(Expr("1")).And(u1.Name.Eq(PH)).And(u.ID.Ne(Expr("2")).Or(u.ID.Gt(Expr("3"))))) // 同上
 	```
 	可用表达式有 `Eq`、`Ne`、`Gt`、`Ge`、`Lt`、`Le`、`In` 和 `NotIn`。`PH` 是占位符的缩写。
 * Join
