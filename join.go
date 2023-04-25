@@ -76,38 +76,38 @@ func (j *Join) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
 	j.on.WriteSQL(buf, aliasMode)
 }
 
-func (t *Table) InnerJoin(table AnyTable, on Condition) *FromTables {
-	return &FromTables{table: t, joins: []Join{{typ: InnerJoin, table: table, on: on}}}
+func (t *Table) InnerJoin(table AnyTable, on Condition) FromTables {
+	return FromTables{table: t, joins: []Join{{typ: InnerJoin, table: table, on: on}}}
 }
 
-func (t *FromTables) InnerJoin(table AnyTable, on Condition) *FromTables {
+func (t FromTables) InnerJoin(table AnyTable, on Condition) FromTables {
 	t.joins = append(t.joins, Join{typ: InnerJoin, table: table, on: on})
 	return t
 }
 
-func (t *Table) LeftJoin(table AnyTable, on Condition) *FromTables {
-	return &FromTables{table: t, joins: []Join{{typ: LeftJoin, table: table, on: on}}}
+func (t *Table) LeftJoin(table AnyTable, on Condition) FromTables {
+	return FromTables{table: t, joins: []Join{{typ: LeftJoin, table: table, on: on}}}
 }
 
-func (t *FromTables) LeftJoin(table AnyTable, on Condition) *FromTables {
+func (t FromTables) LeftJoin(table AnyTable, on Condition) FromTables {
 	t.joins = append(t.joins, Join{typ: LeftJoin, table: table, on: on})
 	return t
 }
 
-func (t *Table) RightJoin(table AnyTable, on Condition) *FromTables {
-	return &FromTables{table: t, joins: []Join{{typ: RightJoin, table: table, on: on}}}
+func (t *Table) RightJoin(table AnyTable, on Condition) FromTables {
+	return FromTables{table: t, joins: []Join{{typ: RightJoin, table: table, on: on}}}
 }
 
-func (t *FromTables) RightJoin(table AnyTable, on Condition) *FromTables {
+func (t FromTables) RightJoin(table AnyTable, on Condition) FromTables {
 	t.joins = append(t.joins, Join{typ: RightJoin, table: table, on: on})
 	return t
 }
 
-func (t *Table) OuterJoin(table AnyTable, on Condition) *FromTables {
-	return &FromTables{table: t, joins: []Join{{typ: OuterJoin, table: table, on: on}}}
+func (t *Table) OuterJoin(table AnyTable, on Condition) FromTables {
+	return FromTables{table: t, joins: []Join{{typ: OuterJoin, table: table, on: on}}}
 }
 
-func (t *FromTables) OuterJoin(table AnyTable, on Condition) *FromTables {
+func (t FromTables) OuterJoin(table AnyTable, on Condition) FromTables {
 	t.joins = append(t.joins, Join{typ: OuterJoin, table: table, on: on})
 	return t
 }

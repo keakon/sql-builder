@@ -15,7 +15,7 @@ const (
 
 type SelectQuery struct {
 	expressions Expressions
-	from        *FromTables
+	from        FromTables
 	where       Cond
 	groupBys    Columns
 	orderBys    OrderBys
@@ -31,13 +31,13 @@ func Select(expressions ...Expression) *SelectQuery {
 	return &SelectQuery{expressions: expressions}
 }
 
-func (q *SelectQuery) FromJoin(from *FromTables) *SelectQuery {
+func (q *SelectQuery) FromJoin(from FromTables) *SelectQuery {
 	q.from = from
 	return q
 }
 
 func (q *SelectQuery) From(from AnyTable) *SelectQuery {
-	q.from = &FromTables{table: from}
+	q.from = FromTables{table: from}
 	return q
 }
 

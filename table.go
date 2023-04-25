@@ -60,25 +60,26 @@ var tableType = reflect.TypeOf(Table{})
 
 func New[T AnyTable](alias string) *T {
 	var t T
-	ptr := reflect.ValueOf(&t)
-	rv := reflect.Indirect(ptr)
+	ptr := reflect.ValueOf(&t)  // reflect.Value -> &t
+	rv := reflect.Indirect(ptr) // reflect.value -> t
+	// 这里不直接使用 rv := reflect.ValueOf(t) 的原因是不会设置 flagAddr，导致后面 f0.Set() 时会被认为是 unaddressable
+
 	fieldCount := rv.NumField()
 	if fieldCount == 0 {
 		return &t
 	}
 
 	f0 := rv.Field(0)
-	if f0.Type() != tableType {
+	if f0.Type() != tableType { // 第 0 个字段不是内嵌的 Table，说明不符合规范，不处理
 		return &t
 	}
 
 	rt := reflect.TypeOf(t)
 	name := rt.Field(0).Tag.Get("db")
-	f0.Set(reflect.ValueOf(Table{name: name, alias: alias}))
+	table := Table{name: name, alias: alias}
+	f0.Set(reflect.ValueOf(table))
 
 	if fieldCount > 1 {
-		table := f0.Interface().(Table)
-
 		for i := 1; i < fieldCount; i++ {
 			f := rv.Field(i)
 			if f.Type() == columnType {
