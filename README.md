@@ -106,6 +106,12 @@ u3 := New[UserTable]("u3")
 	```go
 	Select(Expr("*")).From(u).Where(u.ID.In(Select(Func("DISTINCT", u.ID)).From(u))) // SELECT * FROM `user` WHERE `id` IN (SELECT DISTINCT(`id`) FROM `user`)
 	```
+* 复制
+	```go
+	q1 := u.Select()
+	q2 := q1.Copy().Limit(1)
+	```
+	在复制出来的查询语句上添加其他条件不会干扰原语句。
 
 ## 插入
 * 插入默认值
