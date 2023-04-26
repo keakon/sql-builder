@@ -119,6 +119,7 @@ u3 := New[UserTable]("u3")
 * 设置插入值
 	```go
 	Insert(u).Columns(u.ID, u.Name)                           // INSERT INTO `user` (`id`, `name`) VALUES (?, ?)
+	u.Insert(u.ID, u.Name)                                    // 同上
 	Insert(u).Columns(u.ID, u.Name).Values(nil, Expr(`"1"`))  // INSERT INTO `user` (`id`, `name`) VALUES (NULL, "1")
 	Insert(u).Columns(u.ID, u.Name).NamedValues(u.ID, u.Name) // INSERT INTO `user` (`id`, `name`) VALUES (:id, :name)
 	Insert(u).Columns(u.ID, u.Name).NamedValues()             // 同上，可自动使用 Columns 来作为 NamedValues

@@ -42,8 +42,8 @@ func (t Table) Update(assignments ...Assignment) *UpdateQuery {
 	return Update(t).Set(assignments...)
 }
 
-func (t Table) Insert() *InsertQuery {
-	return Insert(t)
+func (t Table) Insert(columns ...Column) *InsertQuery {
+	return Insert(t).Columns(columns...)
 }
 
 func (t Table) Delete() *DeleteQuery {

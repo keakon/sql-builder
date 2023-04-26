@@ -26,6 +26,10 @@ func TestInsertQuery(t *testing.T) {
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?)",
 		},
 		{
+			query:    u.Insert(u.ID, u.Name),
+			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?)",
+		},
+		{
 			query:    Insert(u).Columns(u.ID, u.Name).Values(),
 			expected: "INSERT INTO `user` (`id`, `name`) VALUES (?, ?)",
 		},
