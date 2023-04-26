@@ -69,13 +69,11 @@ u3 := New[UserTable]("u3")
 	```
 * 排序
 	```go
-	u.Select().OrderBy(u.ID.Desc()).OrderBy(u.Name.Asc()) // SELECT * FROM `user` ORDER BY `id` DESC, `name`
-	u.Select().OrderBy(u.ID.Asc(), u.Name.Desc())         // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
+	u.Select().OrderBy(u.ID.Asc(), u.Name.Desc()) // SELECT * FROM `user` ORDER BY `id`, `name` DESC"
 	```
 * 分组
 	```go
-	u.Select().GroupBy(u.Name).GroupBy(u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
-	u.Select().GroupBy(u.Name, u.ID)
+	u.Select().GroupBy(u.Name, u.ID) // SELECT * FROM `user` GROUP BY `name`, `id`
 	```
 * 加锁
 	```go

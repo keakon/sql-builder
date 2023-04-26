@@ -61,7 +61,7 @@ func TestSelectQuery(t *testing.T) {
 		},
 		{
 			query:    Select(u1).From(u1).OrderBy(u1.ID.Desc()).OrderBy(u1.Name.Asc()),
-			expected: "SELECT * FROM `user` ORDER BY `id` DESC, `name`",
+			expected: "SELECT * FROM `user` ORDER BY `name`",
 		},
 		{
 			query:    Select(u1).From(u1).OrderBy(u1.ID.Asc(), u1.Name.Desc()),
@@ -69,7 +69,7 @@ func TestSelectQuery(t *testing.T) {
 		},
 		{
 			query:    Select(u1).From(u1).GroupBy(u1.Name).GroupBy(u1.ID),
-			expected: "SELECT * FROM `user` GROUP BY `name`, `id`",
+			expected: "SELECT * FROM `user` GROUP BY `id`",
 		},
 		{
 			query:    Select(d1).From(d1).GroupBy(d1.Name, d1.ID),
@@ -139,5 +139,24 @@ func TestSelectQuery(t *testing.T) {
 				t.Errorf("got %s, want %s", got, test.expected)
 			}
 		})
+	}
+}
+
+func TestSelectQueryCopy(t *testing.T) {
+	u := New[UserTable]("")
+	q1 := u.Select(u.ID).Where(u.Name.Eq(PH))
+	q2 := q1.Copy()
+	s1 := q1.String()
+	s2 := q2.String()
+	if s1 != s2 {
+		t.Errorf("got %s, want %s", s2, s1)
+	}
+	q2.Where(u.ID.Ge(Expr("1")))
+	s3 := q2.String()
+	if s1 != s2 {
+		t.Errorf("got %s, want %s", s2, s1)
+	}
+	if s2 == s3 {
+		t.Error("s3 not changed")
 	}
 }

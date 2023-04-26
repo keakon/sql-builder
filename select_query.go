@@ -56,12 +56,12 @@ func (q *SelectQuery) Where(cond Cond) *SelectQuery {
 }
 
 func (q *SelectQuery) GroupBy(columns ...Column) *SelectQuery {
-	q.groupBys = append(q.groupBys, columns...)
+	q.groupBys = columns
 	return q
 }
 
-func (q *SelectQuery) OrderBy(orderBy ...OrderBy) *SelectQuery {
-	q.orderBys = append(q.orderBys, orderBy...)
+func (q *SelectQuery) OrderBy(orderBys ...OrderBy) *SelectQuery {
+	q.orderBys = orderBys
 	return q
 }
 
@@ -83,6 +83,10 @@ func (q *SelectQuery) LockForShare() *SelectQuery {
 func (q *SelectQuery) LockForUpdate() *SelectQuery {
 	q.lockMode = LockForUpdate
 	return q
+}
+
+func (q SelectQuery) Copy() *SelectQuery {
+	return &q
 }
 
 func (q *SelectQuery) WriteSQL(buf *bytes.Buffer, aliasMode AliasMode) {
