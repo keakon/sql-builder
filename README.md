@@ -18,7 +18,7 @@
 1. 支持 `FOR UPDATE/SHARE`，无需后接 `OF table`、`NOWAIT` 和 `SKIP LOCKED` 等
 1. 支持这种不带别名、`HAVING`、`ANY` 等修饰的子查询：`SELECT * FROM permission WHERE role_id IN (SELECT user_role FROM security_domain_user WHERE ...)`
 1. `INSERT INTO table (a, buf, c) VALUES (?, ?, ?)` 能自动匹配 `?` 数量
-1. 支持 `INSERT IGNORE INTO`
+1. 支持 `INSERT IGNORE INTO` 和 `INSERT INTO ... ON DUPLICATE KEY UPDATE ...`
 1. 支持 `INSERT INTO ... SELECT ...`
 1. 支持 `UPDATE ... SET a=a+?`
 1. 表名可作为占位符，例如 `SELECT 1 FROM %s WHERE id=? FOR UPDATE`

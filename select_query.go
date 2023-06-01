@@ -86,6 +86,8 @@ func (q *SelectQuery) LockForUpdate() *SelectQuery {
 }
 
 func (q SelectQuery) Copy() *SelectQuery {
+	// 这里 receiver 没有用 *SelectQuery 是为了让编译器复制一个副本，它内部的字段没有指针，slice 提供的方法也都是替换的，不会对原 SelectQuery 造成影响
+	// 返回 *SelectQuery 的原因是可以链式调用
 	return &q
 }
 
